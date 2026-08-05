@@ -10,7 +10,7 @@ from functools import lru_cache
 from typing import Any
 
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.sql import StatementState, CreateStatementRequestOnWaitTimeout
+from databricks.sdk.service.sql import StatementState
 
 from app.config import settings
 from app.models import QueryResultResponse, TableSummary, SchemaTree
@@ -33,7 +33,6 @@ def execute_query(sql: str) -> QueryResultResponse:
         warehouse_id=settings.databricks_warehouse_id,
         statement=sql,
         wait_timeout='30s',
-        on_wait_timeout=CreateStatementRequestOnWaitTimeout.CANCEL,
     )
 
     if response.status and response.status.state not in (
