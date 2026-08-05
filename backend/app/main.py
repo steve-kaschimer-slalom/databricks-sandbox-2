@@ -27,6 +27,9 @@ def _validate_config() -> None:
     ] if not val]
     if missing:
         _log.error('Missing required configuration: %s', ', '.join(missing))
+    # Log partial values so we can confirm what the runtime is injecting
+    _log.info('DATABRICKS_HOST = %s', settings.databricks_host[:30] if settings.databricks_host else '<empty>')
+    _log.info('DATABRICKS_WAREHOUSE_ID = %s', settings.databricks_warehouse_id[:8] if settings.databricks_warehouse_id else '<empty>')
 
 app.add_middleware(
     CORSMiddleware,
