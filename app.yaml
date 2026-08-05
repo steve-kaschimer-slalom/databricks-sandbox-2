@@ -1,0 +1,3 @@
+# Databricks Apps entry point
+# DATABRICKS_HOST and DATABRICKS_TOKEN are auto-injected by the runtime
+command: ["python", "run.py"]

@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 font-sans;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-navy font-semibold;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-navy text-white px-4 py-2 rounded-md font-medium
+           hover:bg-navy-light transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply bg-gold text-navy-dark px-4 py-2 rounded-md font-medium
+           hover:bg-gold-dark transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-card p-6 border border-gray-100;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-card-hover transition-shadow duration-200;
+  }
+
+  .badge-status {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-running {
+    @apply badge-status bg-gold/20 text-gold-dark;
+  }
+
+  .badge-success {
+    @apply badge-status bg-green-100 text-green-800;
+  }
+
+  .badge-failed {
+    @apply badge-status bg-red-100 text-red-800;
+  }
+
+  .badge-pending {
+    @apply badge-status bg-gray-100 text-gray-600;
+  }
+
+  .stat-card {
+    @apply card flex flex-col gap-1;
+  }
+
+  .stat-value {
+    @apply text-3xl font-bold text-navy;
+  }
+
+  .stat-label {
+    @apply text-sm text-gray-600;
+  }
+
+  .stat-delta-positive {
+    @apply text-xs text-green-600 font-medium;
+  }
+
+  .stat-delta-negative {
+    @apply text-xs text-red-600 font-medium;
+  }
+}
