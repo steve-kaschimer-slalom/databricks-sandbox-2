@@ -38,6 +38,6 @@ if _frontend_dist.exists():
 
     # Catch-all: return index.html so React Router handles client-side navigation
     @app.get('/{full_path:path}')
-    def serve_spa(_full_path: str) -> FileResponse:
+    def serve_spa(full_path: str) -> FileResponse:  # noqa: ARG001
         return FileResponse(_frontend_dist / 'index.html')
 
