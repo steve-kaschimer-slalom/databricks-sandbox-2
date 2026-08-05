@@ -10,12 +10,23 @@ from app.config import settings
 from app.routers import databricks
 
 logging.basicConfig(level=logging.INFO)
+_log = logging.getLogger(__name__)
 
 app = FastAPI(
     title='Databricks API',
     description='FastAPI backend for querying Azure Databricks workspace resources.',
     version='0.1.0',
 )
+
+
+@app.on_event('startup')
+def _validate_config() -> None:
+    missing = [name for name, val in [
+        ('DATABRICKS_HOST', settings.databricks_host),
+        ('DATABRICKS_WAREHOUSE_ID', settings.databricks_warehouse_id),
+    ] if not val]
+    if missing:
+        _log.error('Missing required configuration: %s', ', '.join(missing))
 
 app.add_middleware(
     CORSMiddleware,
