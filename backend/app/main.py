@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -7,6 +8,8 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.routers import databricks
+
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(
     title='Databricks API',
