@@ -21,7 +21,13 @@ def resolve_user_identity(forwarded_user: str, access_token: str | None = None) 
         return _user_identity_cache[forwarded_user]
     if access_token:
         try:
-            client = WorkspaceClient(host=settings.databricks_host or None, token=access_token)
+            # Blank out OAuth env vars so the SDK doesn't see two auth methods at once
+            client = WorkspaceClient(
+                host=settings.databricks_host or None,
+                token=access_token,
+                client_id='',
+                client_secret='',
+            )
             profile = client.current_user.me()
             resolved = profile.user_name or profile.display_name or forwarded_user
             _user_identity_cache[forwarded_user] = resolved
