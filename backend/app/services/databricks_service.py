@@ -40,6 +40,12 @@ def resolve_user_identity(forwarded_user: str, access_token: str | None = None) 
 
 
 @lru_cache(maxsize=1)
+def _host() -> str:
+    host = settings.databricks_host.rstrip('/')
+    return host if host.startswith('http') else f'https://{host}'
+
+
+@lru_cache(maxsize=1)
 def _sp_client() -> WorkspaceClient:
     # Service principal client — used only for warehouse discovery and local dev fallback
     return WorkspaceClient(
@@ -60,11 +66,38 @@ def _resolve_warehouse_id() -> str:
     return warehouse_id
 
 
-def execute_query(sql: str, user_token: str | None = None) -> QueryResultResponse:  # noqa: ARG001 — user_token reserved for future per-user UC enforcement
+def execute_query(sql: str, user_token: str | None = None) -> QueryResultResponse:
+    if user_token:
+        return _execute_as_user(sql, user_token)
+    # Local dev fallback — no forwarded token present
+    return _execute_as_sp(sql)
+
+
+def _execute_as_user(sql: str, access_token: str) -> QueryResultResponse:
+    warehouse_id = _resolve_warehouse_id()
+    start = time.monotonic()
+    resp = requests.post(
+        f'{_host()}/api/2.0/sql/statements',
+        json={'warehouse_id': warehouse_id, 'statement': sql, 'wait_timeout': '30s'},
+        headers={'Authorization': f'Bearer {access_token}'},
+        timeout=35,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    state = data.get('status', {}).get('state', '')
+    if state != 'SUCCEEDED':
+        error = data.get('status', {}).get('error', {})
+        raise RuntimeError(f"Query failed: {error.get('message', state)}")
+    elapsed_ms = int((time.monotonic() - start) * 1000)
+    columns = [col['name'] for col in data.get('manifest', {}).get('schema', {}).get('columns', [])]
+    rows = [list(row) for row in data.get('result', {}).get('data_array', []) or []]
+    return QueryResultResponse(columns=columns, rows=rows, row_count=len(rows), execution_time_ms=elapsed_ms)
+
+
+def _execute_as_sp(sql: str) -> QueryResultResponse:
     client = _sp_client()
     warehouse_id = _resolve_warehouse_id()
     start = time.monotonic()
-
     response = client.statement_execution.execute_statement(
         warehouse_id=warehouse_id,
         statement=sql,
@@ -101,9 +134,9 @@ def execute_query(sql: str, user_token: str | None = None) -> QueryResultRespons
     )
 
 
-def list_tables(catalog: str, schema: str, user_token: str | None = None) -> list[TableSummary]:  # noqa: ARG001
+def list_tables(catalog: str, schema: str, user_token: str | None = None) -> list[TableSummary]:
     sql = f"SELECT table_catalog, table_schema, table_name, table_type, comment FROM {catalog}.information_schema.tables WHERE table_schema = '{schema}' ORDER BY table_name"
-    result = execute_query(sql)
+    result = execute_query(sql, user_token=user_token)
     col = {name: idx for idx, name in enumerate(result.columns)}
     return [
         TableSummary(
@@ -117,9 +150,9 @@ def list_tables(catalog: str, schema: str, user_token: str | None = None) -> lis
     ]
 
 
-def list_schemas(catalog: str, user_token: str | None = None) -> SchemaTree:  # noqa: ARG001
+def list_schemas(catalog: str, user_token: str | None = None) -> SchemaTree:
     # SHOW SCHEMAS requires no information_schema privileges
-    result = execute_query(f'SHOW SCHEMAS IN {catalog}')
+    result = execute_query(f'SHOW SCHEMAS IN {catalog}', user_token=user_token)
     name_idx = result.columns.index('databaseName') if 'databaseName' in result.columns else 0
     return SchemaTree(
         catalog=catalog,
