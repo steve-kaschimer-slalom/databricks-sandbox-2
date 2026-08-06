@@ -1,10 +1,4 @@
-"""
-SQL execution service for Databricks Apps.
-
-DATABRICKS_HOST and DATABRICKS_TOKEN are auto-injected by the Databricks Apps
-runtime. WorkspaceClient() with no arguments picks them up via the SDK's
-unified credential chain.
-"""
+import logging
 import time
 from functools import lru_cache
 from typing import Any
@@ -15,6 +9,8 @@ from databricks.sdk.service.sql import StatementState
 from app.config import settings
 from app.models import QueryResultResponse, TableSummary, SchemaTree
 
+log = logging.getLogger(__name__)
+
 
 @lru_cache(maxsize=1)
 def _client() -> WorkspaceClient:
@@ -24,13 +20,27 @@ def _client() -> WorkspaceClient:
     )
 
 
+@lru_cache(maxsize=1)
+def _resolve_warehouse_id() -> str:
+    """Use the configured warehouse ID, or fall back to the first available warehouse."""
+    if settings.databricks_warehouse_id:
+        return settings.databricks_warehouse_id
+    warehouses = list(_client().warehouses.list())
+    if not warehouses:
+        raise RuntimeError('No SQL Warehouses found in this workspace. Create one and set DATABRICKS_WAREHOUSE_ID.')
+    warehouse_id = warehouses[0].id or ''
+    log.warning('DATABRICKS_WAREHOUSE_ID not set — using first available warehouse: %s (%s)', warehouses[0].name, warehouse_id)
+    return warehouse_id
+
+
 def execute_query(sql: str) -> QueryResultResponse:
     """Execute a SQL statement against the configured warehouse and return tabular results."""
     client = _client()
+    warehouse_id = _resolve_warehouse_id()
     start = time.monotonic()
 
     response = client.statement_execution.execute_statement(
-        warehouse_id=settings.databricks_warehouse_id,
+        warehouse_id=warehouse_id,
         statement=sql,
         wait_timeout='30s',
     )
