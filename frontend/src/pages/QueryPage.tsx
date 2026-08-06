@@ -11,9 +11,9 @@ LIMIT 100`
 
 function ResultTable({ result }: { result: QueryResult }) {
   return (
-    <div className="overflow-auto rounded-lg border border-gray-100">
+    <div className="overflow-auto rounded-lg border border-gray-100 dark:border-[#2a3045]">
       <table className="w-full text-left text-sm">
-        <thead className="bg-navy text-white text-xs">
+        <thead className="bg-navy dark:bg-[#0d1526] text-white text-xs">
           <tr>
             {result.columns.map((col) => (
               <th key={col} className="py-2.5 px-3 font-medium whitespace-nowrap">
@@ -26,15 +26,15 @@ function ResultTable({ result }: { result: QueryResult }) {
           {result.rows.map((row, rowIdx) => (
             <tr
               key={rowIdx}
-              className="border-t border-gray-100 hover:bg-gray-50"
+              className="border-t border-gray-100 dark:border-[#2a3045] hover:bg-gray-50 dark:hover:bg-[#1a1f2e]"
             >
               {row.map((cell, colIdx) => (
                 <td
                   key={colIdx}
-                  className="py-2 px-3 text-gray-900 whitespace-nowrap max-w-xs truncate"
+                  className="py-2 px-3 text-gray-900 dark:text-gray-100 whitespace-nowrap max-w-xs truncate"
                 >
                   {cell === null ? (
-                    <span className="text-gray-300 italic">null</span>
+                    <span className="text-gray-300 dark:text-gray-600 italic">null</span>
                   ) : (
                     String(cell)
                   )}
@@ -80,7 +80,6 @@ export default function QueryPage() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    // Ctrl+Enter / Cmd+Enter to run
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault()
       handleRun()
@@ -91,17 +90,17 @@ export default function QueryPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-navy">Query Editor</h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-navy dark:text-white">Query Editor</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Execute SQL against your Databricks SQL Warehouse
           </p>
         </div>
       </div>
 
       <div className="card p-0 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
-          <span className="text-xs font-medium text-gray-600">SQL</span>
-          <span className="text-xs text-gray-300">Ctrl + Enter to run</span>
+        <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 dark:bg-[#0f1117] border-b border-gray-100 dark:border-[#2a3045]">
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">SQL</span>
+          <span className="text-xs text-gray-300 dark:text-gray-600">Ctrl + Enter to run</span>
         </div>
         <textarea
           ref={textareaRef}
@@ -110,10 +109,11 @@ export default function QueryPage() {
           onKeyDown={handleKeyDown}
           rows={10}
           spellCheck={false}
-          className="w-full px-4 py-3 font-mono text-sm text-gray-900 bg-white
-                     focus:outline-none resize-y border-b border-gray-100"
+          className="w-full px-4 py-3 font-mono text-sm text-gray-900 dark:text-gray-100
+                     bg-white dark:bg-[#1a1f2e]
+                     focus:outline-none resize-y border-b border-gray-100 dark:border-[#2a3045]"
         />
-        <div className="flex items-center justify-between px-4 py-2.5">
+        <div className="flex items-center justify-between px-4 py-2.5 dark:bg-[#1a1f2e]">
           <button
             onClick={handleRun}
             disabled={isPending || !sql.trim()}
@@ -124,13 +124,13 @@ export default function QueryPage() {
           </button>
           {result && (
             <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1.5 text-xs text-gray-600">
+              <span className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
                 <Clock size={12} />
                 {result.execution_time_ms}ms · {result.row_count} rows
               </span>
               <button
                 onClick={() => downloadCsv(result)}
-                className="flex items-center gap-1.5 text-xs text-navy hover:underline"
+                className="flex items-center gap-1.5 text-xs text-navy dark:text-gold hover:underline"
               >
                 <Download size={12} />
                 Export CSV
@@ -141,7 +141,7 @@ export default function QueryPage() {
       </div>
 
       {error && (
-        <div className="card border-red-200 bg-red-50 text-red-700 text-sm font-mono">
+        <div className="card border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-sm font-mono">
           {(error as Error).message}
         </div>
       )}
@@ -149,7 +149,7 @@ export default function QueryPage() {
       {result && result.rows.length > 0 && <ResultTable result={result} />}
 
       {result && result.rows.length === 0 && (
-        <div className="card text-center text-gray-600 text-sm py-10">
+        <div className="card text-center text-gray-600 dark:text-gray-400 text-sm py-10">
           Query returned 0 rows.
         </div>
       )}

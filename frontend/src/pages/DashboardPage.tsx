@@ -57,8 +57,8 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-navy">Dashboard</h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-navy dark:text-white">Dashboard</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Business data from your Databricks SQL Warehouse
           </p>
         </div>
@@ -71,12 +71,19 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      <div className="card border-l-4 border-l-gold text-sm text-gray-600">
+      <div className="card border-l-4 border-l-gold text-sm text-gray-600 dark:text-gray-400">
         <div className="flex items-start gap-2">
           <AlertCircle size={16} className="text-gold mt-0.5 flex-shrink-0" />
           <span>
-            The queries on this page use the Databricks sample <code className="bg-gray-100 px-1 rounded">samples.nyctaxi.trips</code> dataset.
-            Replace the SQL in <code className="bg-gray-100 px-1 rounded">DashboardPage.tsx</code> with your own business tables.
+            The queries on this page use the Databricks sample{' '}
+            <code className="bg-gray-100 dark:bg-[#0f1117] dark:text-gray-300 px-1 rounded">
+              samples.nyctaxi.trips
+            </code>{' '}
+            dataset. Replace the SQL in{' '}
+            <code className="bg-gray-100 dark:bg-[#0f1117] dark:text-gray-300 px-1 rounded">
+              DashboardPage.tsx
+            </code>{' '}
+            with your own business tables.
           </span>
         </div>
       </div>
@@ -99,7 +106,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="card">
-        <h2 className="text-base font-semibold text-navy mb-4">
+        <h2 className="text-base font-semibold text-navy dark:text-white mb-4">
           Top 10 Pickup Zones by Trip Count
         </h2>
         {chartQuery.isLoading ? (
@@ -107,22 +114,27 @@ export default function DashboardPage() {
             <Spinner size={32} />
           </div>
         ) : chartQuery.error ? (
-          <div className="h-64 flex items-center justify-center text-red-600 text-sm">
+          <div className="h-64 flex items-center justify-center text-red-600 dark:text-red-400 text-sm">
             Query failed — check the browser console for details.
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 40 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E8E8E8" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid, #E8E8E8)" />
               <XAxis
                 dataKey="category"
-                tick={{ fontSize: 11, fill: '#666' }}
+                tick={{ fontSize: 11, fill: 'var(--chart-tick, #666)' }}
                 angle={-45}
                 textAnchor="end"
               />
-              <YAxis tick={{ fontSize: 11, fill: '#666' }} />
+              <YAxis tick={{ fontSize: 11, fill: 'var(--chart-tick, #666)' }} />
               <Tooltip
-                contentStyle={{ fontSize: 12, borderColor: '#E8E8E8' }}
+                contentStyle={{
+                  fontSize: 12,
+                  borderColor: 'var(--chart-grid, #E8E8E8)',
+                  backgroundColor: 'var(--chart-tooltip-bg, #fff)',
+                  color: 'var(--chart-tooltip-text, #1A1A1A)',
+                }}
                 cursor={{ fill: 'rgba(0,48,135,0.05)' }}
               />
               <Bar dataKey="count" fill="#003087" radius={[3, 3, 0, 0]} />

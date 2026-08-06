@@ -8,6 +8,22 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <title>Databricks Sandbox 2</title>
+    <!-- Declare support for both schemes so the browser can theme native UI early -->
+    <meta name="color-scheme" content="light dark">
+    <!-- Inline script (not module/defer) to apply persisted theme before first paint — prevents FOUC -->
+    <script>
+      {
+        const saved = localStorage.getItem('color-scheme');
+        if (saved === 'dark') {
+          document.documentElement.classList.add('dark');
+          document.querySelector('meta[name="color-scheme"]').content = 'dark';
+        } else if (saved === 'light') {
+          document.documentElement.classList.remove('dark');
+          document.querySelector('meta[name="color-scheme"]').content = 'light';
+        }
+        // No saved value → leave as system default (light dark)
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

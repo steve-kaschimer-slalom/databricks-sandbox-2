@@ -25,7 +25,6 @@ export default function TablesPage() {
 
   function openInQuery(tableFqn: string) {
     const sql = `SELECT *\nFROM ${tableFqn}\nLIMIT 100`
-    // Pass SQL via sessionStorage so QueryPage can pre-populate it
     sessionStorage.setItem('pendingQuery', sql)
     navigate('/query')
   }
@@ -33,9 +32,12 @@ export default function TablesPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-navy">Tables</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Browse Unity Catalog — <code className="bg-gray-100 px-1 rounded">{catalog}</code>
+        <h1 className="text-2xl font-bold text-navy dark:text-white">Tables</h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          Browse Unity Catalog —{' '}
+          <code className="bg-gray-100 dark:bg-[#0f1117] dark:text-gray-300 px-1 rounded">
+            {catalog}
+          </code>
         </p>
       </div>
 
@@ -43,24 +45,26 @@ export default function TablesPage() {
         {/* Schema list */}
         <div className="w-56 flex-shrink-0">
           <div className="card p-0 overflow-hidden">
-            <div className="px-4 py-2.5 bg-navy text-white text-xs font-medium flex items-center gap-2">
+            <div className="px-4 py-2.5 bg-navy dark:bg-[#0d1526] text-white text-xs font-medium flex items-center gap-2">
               <Database size={13} />
               Schemas
             </div>
             {schemasQuery.isLoading ? (
               <div className="py-6 flex justify-center"><Spinner /></div>
             ) : schemasQuery.error ? (
-              <div className="py-6 text-center text-red-600 text-xs">Failed to load schemas.</div>
+              <div className="py-6 text-center text-red-600 dark:text-red-400 text-xs">
+                Failed to load schemas.
+              </div>
             ) : (
               <ul>
                 {schemasQuery.data?.schemas.map((schema) => (
                   <li key={schema}>
                     <button
                       onClick={() => setSelectedSchema(schema)}
-                      className={`w-full text-left flex items-center justify-between px-4 py-2.5 text-sm border-b border-gray-100 transition-colors ${
+                      className={`w-full text-left flex items-center justify-between px-4 py-2.5 text-sm border-b border-gray-100 dark:border-[#2a3045] transition-colors ${
                         selectedSchema === schema
-                          ? 'bg-navy/5 text-navy font-medium'
-                          : 'text-gray-600 hover:bg-gray-50'
+                          ? 'bg-navy/5 dark:bg-navy/20 text-navy dark:text-white font-medium'
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#0f1117]'
                       }`}
                     >
                       <span className="truncate">{schema}</span>
@@ -76,7 +80,7 @@ export default function TablesPage() {
         {/* Table list */}
         <div className="flex-1 min-w-0">
           {!selectedSchema ? (
-            <div className="card flex items-center justify-center h-40 text-gray-600 text-sm">
+            <div className="card flex items-center justify-center h-40 text-gray-600 dark:text-gray-400 text-sm">
               Select a schema to view its tables.
             </div>
           ) : tablesQuery.isLoading ? (
@@ -84,17 +88,17 @@ export default function TablesPage() {
               <Spinner size={28} />
             </div>
           ) : tablesQuery.error ? (
-            <div className="card flex items-center justify-center h-40 text-red-600 text-sm">
+            <div className="card flex items-center justify-center h-40 text-red-600 dark:text-red-400 text-sm">
               Failed to load tables.
             </div>
           ) : (
             <div className="card p-0 overflow-hidden">
-              <div className="px-4 py-2.5 bg-navy text-white text-xs font-medium flex items-center gap-2">
+              <div className="px-4 py-2.5 bg-navy dark:bg-[#0d1526] text-white text-xs font-medium flex items-center gap-2">
                 <Table2 size={13} />
                 {selectedSchema} · {tablesQuery.data?.length ?? 0} tables
               </div>
               <table className="w-full text-left">
-                <thead className="bg-gray-50 text-xs text-gray-600 uppercase">
+                <thead className="bg-gray-50 dark:bg-[#0f1117] text-xs text-gray-600 dark:text-gray-400 uppercase">
                   <tr>
                     <th className="py-2.5 px-4">Table</th>
                     <th className="py-2.5 px-4">Type</th>
@@ -106,15 +110,15 @@ export default function TablesPage() {
                   {tablesQuery.data?.map((table) => (
                     <tr
                       key={table.table_name}
-                      className="border-t border-gray-100 hover:bg-gray-50"
+                      className="border-t border-gray-100 dark:border-[#2a3045] hover:bg-gray-50 dark:hover:bg-[#0f1117]"
                     >
-                      <td className="py-2.5 px-4 font-medium text-navy text-sm">
+                      <td className="py-2.5 px-4 font-medium text-navy dark:text-white text-sm">
                         {table.table_name}
                       </td>
                       <td className="py-2.5 px-4">
                         <span className="badge-pending">{table.table_type}</span>
                       </td>
-                      <td className="py-2.5 px-4 text-sm text-gray-600 max-w-xs truncate">
+                      <td className="py-2.5 px-4 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
                         {table.comment ?? '—'}
                       </td>
                       <td className="py-2.5 px-4">
@@ -124,7 +128,7 @@ export default function TablesPage() {
                               `${table.catalog}.${table.schema_name}.${table.table_name}`
                             )
                           }
-                          className="flex items-center gap-1.5 text-xs text-navy hover:underline"
+                          className="flex items-center gap-1.5 text-xs text-navy dark:text-gold hover:underline"
                         >
                           <TerminalSquare size={12} />
                           Query

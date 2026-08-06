@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { LayoutDashboard, TerminalSquare, Table2, Flame, UserCircle } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchCurrentUser } from '../api/databricks'
+import ThemeToggle from './ThemeToggle'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -17,8 +18,8 @@ export default function Layout() {
   })
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="bg-navy text-white shadow-md">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[#0f1117]">
+      <header className="bg-navy dark:bg-[#0d1526] text-white shadow-md dark:shadow-none dark:border-b dark:border-[#2a3045]">
         <div className="max-w-screen-xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Flame className="text-gold" size={28} />
@@ -27,16 +28,19 @@ export default function Layout() {
               <span className="ml-2 text-gray-300 text-sm font-light">Databricks Analytics</span>
             </div>
           </div>
-          {currentUser?.email ? (
-            <div className="flex items-center gap-2 text-sm text-gray-300">
-              <UserCircle size={18} className="text-gold" />
-              <span>{currentUser.email}</span>
-            </div>
-          ) : (
-            <span className="text-xs text-gray-300 hidden sm:block">
-              Azure Databricks Intelligence Platform
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            {currentUser?.email ? (
+              <div className="flex items-center gap-2 text-sm text-gray-300">
+                <UserCircle size={18} className="text-gold" />
+                <span>{currentUser.email}</span>
+              </div>
+            ) : (
+              <span className="text-xs text-gray-300 hidden sm:block">
+                Azure Databricks Intelligence Platform
+              </span>
+            )}
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
@@ -51,8 +55,8 @@ export default function Layout() {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors duration-150 ${
                       isActive
-                        ? 'bg-navy text-white'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-navy'
+                        ? 'bg-navy text-white dark:bg-navy/80'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-navy dark:text-gray-400 dark:hover:bg-[#1a1f2e] dark:hover:text-white'
                     }`
                   }
                 >
@@ -69,7 +73,7 @@ export default function Layout() {
         </main>
       </div>
 
-      <footer className="bg-navy-dark text-gray-300 text-center text-xs py-3">
+      <footer className="bg-navy-dark dark:bg-[#0a0e1a] text-gray-300 text-center text-xs py-3">
         © {new Date().getFullYear()} Kaschimer — Internal Analytics Platform
       </footer>
     </div>

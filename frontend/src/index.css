@@ -3,12 +3,28 @@
 @tailwind utilities;
 
 @layer base {
+  /* Recharts uses inline styles so we bridge via CSS custom properties */
+  :root {
+    --chart-grid: #E8E8E8;
+    --chart-tick: #666666;
+    --chart-tooltip-bg: #ffffff;
+    --chart-tooltip-text: #1A1A1A;
+  }
+  .dark {
+    --chart-grid: #2a3045;
+    --chart-tick: #9ca3af;
+    --chart-tooltip-bg: #1a1f2e;
+    --chart-tooltip-text: #f3f4f6;
+  }
+
   body {
     @apply bg-gray-50 text-gray-900 font-sans;
+    @apply dark:bg-[#0f1117] dark:text-gray-100;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply text-navy font-semibold;
+    @apply dark:text-white;
   }
 }
 
@@ -16,21 +32,25 @@
   .btn-primary {
     @apply bg-navy text-white px-4 py-2 rounded-md font-medium
            hover:bg-navy-light transition-colors duration-200
-           focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2;
+           focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2
+           dark:focus:ring-offset-[#1a1f2e];
   }
 
   .btn-secondary {
     @apply bg-gold text-navy-dark px-4 py-2 rounded-md font-medium
            hover:bg-gold-dark transition-colors duration-200
-           focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2;
+           focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2
+           dark:focus:ring-offset-[#1a1f2e];
   }
 
   .card {
     @apply bg-white rounded-lg shadow-card p-6 border border-gray-100;
+    @apply dark:bg-[#1a1f2e] dark:border-[#2a3045] dark:shadow-none;
   }
 
   .card-hover {
     @apply card hover:shadow-card-hover transition-shadow duration-200;
+    @apply dark:hover:shadow-none dark:hover:border-[#3a4060];
   }
 
   .badge-status {
@@ -39,18 +59,22 @@
 
   .badge-running {
     @apply badge-status bg-gold/20 text-gold-dark;
+    @apply dark:bg-gold/10 dark:text-gold;
   }
 
   .badge-success {
     @apply badge-status bg-green-100 text-green-800;
+    @apply dark:bg-green-900/30 dark:text-green-400;
   }
 
   .badge-failed {
     @apply badge-status bg-red-100 text-red-800;
+    @apply dark:bg-red-900/30 dark:text-red-400;
   }
 
   .badge-pending {
     @apply badge-status bg-gray-100 text-gray-600;
+    @apply dark:bg-[#2a3045] dark:text-gray-400;
   }
 
   .stat-card {
@@ -59,17 +83,21 @@
 
   .stat-value {
     @apply text-3xl font-bold text-navy;
+    @apply dark:text-white;
   }
 
   .stat-label {
     @apply text-sm text-gray-600;
+    @apply dark:text-gray-400;
   }
 
   .stat-delta-positive {
     @apply text-xs text-green-600 font-medium;
+    @apply dark:text-green-400;
   }
 
   .stat-delta-negative {
     @apply text-xs text-red-600 font-medium;
+    @apply dark:text-red-400;
   }
 }
