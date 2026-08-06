@@ -68,7 +68,14 @@ def _resolve_warehouse_id() -> str:
 
 def execute_query(sql: str, user_token: str | None = None) -> QueryResultResponse:
     if user_token:
-        return _execute_as_user(sql, user_token)
+        try:
+            return _execute_as_user(sql, user_token)
+        except requests.HTTPError as exc:
+            if exc.response is not None and exc.response.status_code == 403:
+                # Forwarded token lacks sql scope — fall back to SP
+                log.warning('User token missing sql scope, falling back to SP for query execution')
+                return _execute_as_sp(sql)
+            raise
     # Local dev fallback — no forwarded token present
     return _execute_as_sp(sql)
 
