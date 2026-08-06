@@ -157,6 +157,8 @@ When working in these areas, load the corresponding skill for workspace-specific
 | SQL queries, `information_schema`, warehouse tuning, stored procedures | `databricks-dbsql` |
 | Unity Catalog permissions, GRANT/REVOKE, row/column security | `databricks-unity-catalog` |
 | React, Tailwind, TanStack Query, Recharts, frontend components | `modern-web-guidance` |
+| Vite specific features, setting, or configuration | vite |
+| Vite testing | vitest |
 | Databricks Jobs, DABs, multi-task DAGs, triggers | `databricks-jobs` |
 | Lakebase (Postgres), branching, synced tables | `databricks-lakebase` |
 | Managed ingestion pipelines (Salesforce, SQL Server, etc.) | `databricks-lakeflow-connect` |
@@ -164,3 +166,4 @@ When working in these areas, load the corresponding skill for workspace-specific
 | CLI, profile management, workspace exploration | `databricks-core` |
 | Looking up official Databricks documentation | `databricks-docs` |
 | UX design, KPI screens, chart layout, IBCS notation | `databricks-app-design` |
+| Site Accessibility | `accessibility` |

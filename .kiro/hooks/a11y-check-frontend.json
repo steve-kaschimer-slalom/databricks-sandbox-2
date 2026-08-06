@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Accessibility Check on Frontend File Save",
+      "trigger": "PreToolUse",
+      "matcher": "fs_write|str_replace|fs_append",
+      "action": {
+        "type": "agent",
+        "prompt": "A file in the frontend/ folder is about to be written. Before proceeding, perform an accessibility review of the new content being written. Check for:\n- Interactive elements (buttons, links, inputs) missing accessible labels (aria-label, aria-labelledby, or visible text)\n- Images missing alt text\n- Form inputs missing associated labels\n- Color used as the sole means of conveying information\n- Focus management issues (e.g. modals or dynamic content that doesn't manage focus)\n- Insufficient color contrast for text against its background (flag any text that relies solely on gray-300/AAAAAA or lighter on white)\n- Icon-only buttons missing aria-label\n\nIf you find any issues, list them clearly and ask the user whether to fix them before writing the file. If no issues are found, confirm \"Accessibility check passed\" and allow the write to proceed."
+      }
+    }
+  ]
+}

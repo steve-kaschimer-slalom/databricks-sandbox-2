@@ -1,8 +1,10 @@
-export default function Spinner({ size = 20 }: { size?: number }) {
+export default function Spinner({ size = 20, label = 'Loading…' }: { size?: number; label?: string }) {
   return (
     <svg
+      role="status"
+      aria-label={label}
       style={{ width: size, height: size }}
-      className="animate-spin text-navy"
+      className="animate-spin text-navy dark:text-white"
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"

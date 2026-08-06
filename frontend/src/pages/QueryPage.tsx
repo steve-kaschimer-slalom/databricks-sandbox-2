@@ -12,11 +12,11 @@ LIMIT 100`
 function ResultTable({ result }: { result: QueryResult }) {
   return (
     <div className="overflow-auto rounded-lg border border-gray-100 dark:border-[#2a3045]">
-      <table className="w-full text-left text-sm">
+      <table className="w-full text-left text-sm" aria-label={`Query results — ${result.row_count} rows`}>
         <thead className="bg-navy dark:bg-[#0d1526] text-white text-xs">
           <tr>
             {result.columns.map((col) => (
-              <th key={col} className="py-2.5 px-3 font-medium whitespace-nowrap">
+              <th key={col} scope="col" className="py-2.5 px-3 font-medium whitespace-nowrap">
                 {col}
               </th>
             ))}
@@ -34,7 +34,7 @@ function ResultTable({ result }: { result: QueryResult }) {
                   className="py-2 px-3 text-gray-900 dark:text-gray-100 whitespace-nowrap max-w-xs truncate"
                 >
                   {cell === null ? (
-                    <span className="text-gray-300 dark:text-gray-600 italic">null</span>
+                    <span className="text-gray-600 dark:text-gray-500 italic">null</span>
                   ) : (
                     String(cell)
                   )}
@@ -102,40 +102,53 @@ export default function QueryPage() {
 
       <div className="card p-0 overflow-hidden">
         <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 dark:bg-[#0f1117] border-b border-gray-100 dark:border-[#2a3045]">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">SQL</span>
-          <span className="text-xs text-gray-300 dark:text-gray-600">Ctrl + Enter to run</span>
+          <label htmlFor="sql-editor" className="text-xs font-medium text-gray-600 dark:text-gray-400">
+            SQL
+          </label>
+          <span className="text-xs text-gray-600 dark:text-gray-500" aria-hidden="true">
+            Ctrl + Enter to run
+          </span>
         </div>
         <textarea
+          id="sql-editor"
           ref={textareaRef}
           value={sql}
           onChange={(e) => setSql(e.target.value)}
           onKeyDown={handleKeyDown}
           rows={10}
           spellCheck={false}
+          aria-label="SQL query editor"
+          aria-describedby="sql-shortcut-hint"
           className="w-full px-4 py-3 font-mono text-sm text-gray-900 dark:text-gray-100
                      bg-white dark:bg-[#1a1f2e]
-                     focus:outline-none resize-y border-b border-gray-100 dark:border-[#2a3045]"
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-inset
+                     focus-visible:ring-gold resize-y border-b border-gray-100 dark:border-[#2a3045]"
         />
+        <p id="sql-shortcut-hint" className="sr-only">
+          Press Control Enter or Command Enter to run the query.
+        </p>
         <div className="flex items-center justify-between px-4 py-2.5 dark:bg-[#1a1f2e]">
           <button
             onClick={handleRun}
             disabled={isPending || !sql.trim()}
             className="btn-primary flex items-center gap-2 text-sm disabled:opacity-60"
           >
-            <Play size={14} />
+            <Play size={14} aria-hidden="true" />
             {isPending ? 'Running…' : 'Run Query'}
           </button>
           {result && (
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
-                <Clock size={12} />
+                <Clock size={12} aria-hidden="true" />
                 {result.execution_time_ms}ms · {result.row_count} rows
               </span>
               <button
                 onClick={() => downloadCsv(result)}
-                className="flex items-center gap-1.5 text-xs text-navy dark:text-gold hover:underline"
+                className="flex items-center gap-1.5 text-xs text-navy dark:text-gold
+                           hover:underline focus:outline-none focus-visible:ring-2
+                           focus-visible:ring-gold focus-visible:ring-offset-1 rounded"
               >
-                <Download size={12} />
+                <Download size={12} aria-hidden="true" />
                 Export CSV
               </button>
             </div>
@@ -143,8 +156,13 @@ export default function QueryPage() {
         </div>
       </div>
 
+      {/* role=alert ensures screen readers announce errors without focus moving */}
       {error && (
-        <div className="card border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-sm font-mono">
+        <div
+          role="alert"
+          className="card border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30
+                     text-red-700 dark:text-red-400 text-sm font-mono"
+        >
           {(error as Error).message}
         </div>
       )}
@@ -152,7 +170,7 @@ export default function QueryPage() {
       {result && result.rows.length > 0 && <ResultTable result={result} />}
 
       {result && result.rows.length === 0 && (
-        <div className="card text-center text-gray-600 dark:text-gray-400 text-sm py-10">
+        <div role="status" className="card text-center text-gray-600 dark:text-gray-400 text-sm py-10">
           Query returned 0 rows.
         </div>
       )}
