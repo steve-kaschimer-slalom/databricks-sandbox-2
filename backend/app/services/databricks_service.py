@@ -90,7 +90,7 @@ def _execute_as_user(sql: str, access_token: str) -> QueryResultResponse:
         timeout=35,
     )
     if not resp.ok:
-        log.error('Statement Execution API %s: %s', resp.status_code, resp.text)
+        log.debug('Statement Execution API %s: %s', resp.status_code, resp.text)
         resp.raise_for_status()
     data = resp.json()
     state = data.get('status', {}).get('state', '')
