@@ -20,8 +20,8 @@ Colors are defined **flat** in `tailwind.config.js` under `theme.extend.colors`.
 | `gold` | `#F5A800` | `bg-gold`, `text-gold`, `border-gold` | Accents, highlights, icons |
 | `gold-dark` | `#CC8C00` | `hover:bg-gold-dark` | Hover on gold elements |
 | `gold-light` | `#FFD04D` | `bg-gold-light`, `text-gold-light` | Light gold backgrounds |
-| `white` | `#FFFFFF` | `bg-white`, `text-white` | Card backgrounds, header text |
-| `gray-50` | `#F5F5F5` | `bg-gray-50` | Page background, table headers |
+| `white` | `#FFFFFF` | `bg-white`, `text-white` | Page background (light mode), card backgrounds, header text |
+| `gray-50` | `#F5F5F5` | `bg-gray-50` | Table headers, subtle backgrounds |
 | `gray-100` | `#E8E8E8` | `border-gray-100`, `bg-gray-100` | Card borders, dividers |
 | `gray-300` | `#AAAAAA` | `text-gray-300` | Muted / disabled text |
 | `gray-600` | `#666666` | `text-gray-600` | Secondary text, labels |
@@ -45,7 +45,8 @@ Two custom shadow tokens are defined in `tailwind.config.js`:
 ## Typography
 
 - **Font family:** Inter (loaded via CSS), falling back to `system-ui` and `sans-serif`.
-- **Headings** (`h1`–`h6`) get `text-navy font-semibold` via `@layer base` in `index.css`.
+- **Headings** (`h1`–`h6`) get `text-navy font-semibold` via `@layer base` in `index.css` (dark mode: `text-white`).
+- **Page background:** `bg-white` light / `dark:bg-[#0f1117]` dark
 - **Page titles:** `text-2xl font-bold text-navy`
 - **Section titles:** `text-base font-semibold text-navy`
 - **Body / secondary text:** `text-sm text-gray-600`

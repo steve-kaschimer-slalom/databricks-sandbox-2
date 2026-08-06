@@ -167,3 +167,19 @@ When working in these areas, load the corresponding skill for workspace-specific
 | Looking up official Databricks documentation | `databricks-docs` |
 | UX design, KPI screens, chart layout, IBCS notation | `databricks-app-design` |
 | Site Accessibility | `accessibility` |
+
+---
+
+## Documentation Maintenance
+
+After completing any change, update the relevant documentation in `docs/` before considering the task done.
+
+| What changed | What to update |
+|---|---|
+| New architectural pattern or reusable approach | Add a named pattern to `docs/patterns.md` with a code snippet |
+| Significant design decision or trade-off | Add an ADR to `docs/decisions.md` with date, rationale, and trade-offs |
+| New component, flow, or data path | Add or update a diagram in `docs/diagrams.md` |
+| Change to repo structure, endpoints, config, auth, or deploy process | Update `docs/architecture.md` |
+| New workspace-specific constant, gotcha, or convention | Update the relevant section in `.kiro/steering/project-context.md` or `.kiro/steering/brand-and-ui.md` |
+
+If the change is minor (a bug fix, a copy tweak, a colour adjustment) and doesn't affect how the system works or how future work should be done, no documentation update is needed.
