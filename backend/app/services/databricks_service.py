@@ -76,25 +76,26 @@ def execute_query(sql: str) -> QueryResultResponse:
 
 
 def list_tables(catalog: str, schema: str) -> list[TableSummary]:
-    client = _client()
-    tables = client.tables.list(catalog_name=catalog, schema_name=schema)
+    sql = f"SELECT table_catalog, table_schema, table_name, table_type, comment FROM {catalog}.information_schema.tables WHERE table_schema = '{schema}' ORDER BY table_name"
+    result = execute_query(sql)
+    col = {name: idx for idx, name in enumerate(result.columns)}
     return [
         TableSummary(
-            catalog=t.catalog_name or catalog,
-            schema_name=t.schema_name or schema,
-            table_name=t.name or '',
-            table_type=t.table_type.value if t.table_type else 'UNKNOWN',
-            comment=t.comment,
+            catalog=row[col['table_catalog']],
+            schema_name=row[col['table_schema']],
+            table_name=row[col['table_name']],
+            table_type=row[col['table_type']],
+            comment=row[col['comment']] if col.get('comment') is not None else None,
         )
-        for t in tables
+        for row in result.rows
     ]
 
 
 def list_schemas(catalog: str) -> SchemaTree:
-    client = _client()
-    schemas = client.schemas.list(catalog_name=catalog)
+    sql = f'SELECT schema_name FROM {catalog}.information_schema.schemata ORDER BY schema_name'
+    result = execute_query(sql)
     return SchemaTree(
         catalog=catalog,
-        schemas=[s.name or '' for s in schemas],
+        schemas=[row[0] for row in result.rows],
     )
 
