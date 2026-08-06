@@ -13,19 +13,27 @@ log = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=1)
-def _client() -> WorkspaceClient:
+def _sp_client() -> WorkspaceClient:
+    # Service principal client — used only for warehouse discovery and local dev fallback
     return WorkspaceClient(
         host=settings.databricks_host or None,
         token=settings.databricks_token or None,
     )
 
 
+def _user_client(user_token: str | None) -> WorkspaceClient:
+    # Per-request client so queries run as the user and UC permissions are enforced
+    return WorkspaceClient(
+        host=settings.databricks_host or None,
+        token=user_token or settings.databricks_token or None,
+    )
+
+
 @lru_cache(maxsize=1)
 def _resolve_warehouse_id() -> str:
-    """Use the configured warehouse ID, or fall back to the first available warehouse."""
     if settings.databricks_warehouse_id:
         return settings.databricks_warehouse_id
-    warehouses = list(_client().warehouses.list())
+    warehouses = list(_sp_client().warehouses.list())
     if not warehouses:
         raise RuntimeError('No SQL Warehouses found in this workspace. Create one and set DATABRICKS_WAREHOUSE_ID.')
     warehouse_id = warehouses[0].id or ''
@@ -33,9 +41,8 @@ def _resolve_warehouse_id() -> str:
     return warehouse_id
 
 
-def execute_query(sql: str) -> QueryResultResponse:
-    """Execute a SQL statement against the configured warehouse and return tabular results."""
-    client = _client()
+def execute_query(sql: str, user_token: str | None = None) -> QueryResultResponse:
+    client = _user_client(user_token)
     warehouse_id = _resolve_warehouse_id()
     start = time.monotonic()
 
@@ -75,9 +82,9 @@ def execute_query(sql: str) -> QueryResultResponse:
     )
 
 
-def list_tables(catalog: str, schema: str) -> list[TableSummary]:
+def list_tables(catalog: str, schema: str, user_token: str | None = None) -> list[TableSummary]:
     sql = f"SELECT table_catalog, table_schema, table_name, table_type, comment FROM {catalog}.information_schema.tables WHERE table_schema = '{schema}' ORDER BY table_name"
-    result = execute_query(sql)
+    result = execute_query(sql, user_token=user_token)
     col = {name: idx for idx, name in enumerate(result.columns)}
     return [
         TableSummary(
@@ -91,9 +98,9 @@ def list_tables(catalog: str, schema: str) -> list[TableSummary]:
     ]
 
 
-def list_schemas(catalog: str) -> SchemaTree:
+def list_schemas(catalog: str, user_token: str | None = None) -> SchemaTree:
     # SHOW SCHEMAS requires no information_schema privileges
-    result = execute_query(f'SHOW SCHEMAS IN {catalog}')
+    result = execute_query(f'SHOW SCHEMAS IN {catalog}', user_token=user_token)
     name_idx = result.columns.index('databaseName') if 'databaseName' in result.columns else 0
     return SchemaTree(
         catalog=catalog,

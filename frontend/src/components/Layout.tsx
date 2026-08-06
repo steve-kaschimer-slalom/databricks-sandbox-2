@@ -1,5 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { LayoutDashboard, TerminalSquare, Table2, Flame } from 'lucide-react'
+import { LayoutDashboard, TerminalSquare, Table2, Flame, UserCircle } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { fetchCurrentUser } from '../api/databricks'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -8,6 +10,12 @@ const navItems = [
 ]
 
 export default function Layout() {
+  const { data: currentUser } = useQuery({
+    queryKey: ['me'],
+    queryFn: fetchCurrentUser,
+    staleTime: Infinity,
+  })
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-navy text-white shadow-md">
@@ -19,9 +27,16 @@ export default function Layout() {
               <span className="ml-2 text-gray-300 text-sm font-light">Databricks Analytics</span>
             </div>
           </div>
-          <span className="text-xs text-gray-300 hidden sm:block">
-            Azure Databricks Intelligence Platform
-          </span>
+          {currentUser?.email ? (
+            <div className="flex items-center gap-2 text-sm text-gray-300">
+              <UserCircle size={18} className="text-gold" />
+              <span>{currentUser.email}</span>
+            </div>
+          ) : (
+            <span className="text-xs text-gray-300 hidden sm:block">
+              Azure Databricks Intelligence Platform
+            </span>
+          )}
         </div>
       </header>
 

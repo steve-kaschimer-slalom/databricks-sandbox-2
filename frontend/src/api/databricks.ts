@@ -9,7 +9,10 @@ const apiClient = axios.create({
 export const runQuery = (sql: string): Promise<QueryResult> =>
   apiClient.post<QueryResult>('/query', { sql }).then((r) => r.data)
 
-export const fetchSchemas = (catalog = 'main'): Promise<SchemaTree> =>
+export const fetchCurrentUser = (): Promise<{ email: string | null }> =>
+  apiClient.get<{ email: string | null }>('/me').then((r) => r.data)
+
+export const fetchSchemas = (catalog = 'dbw_sandbox_sk'): Promise<SchemaTree> =>
   apiClient.get<SchemaTree>('/schemas', { params: { catalog } }).then((r) => r.data)
 
 export const fetchTables = (catalog: string, schema: string): Promise<TableSummary[]> =>
