@@ -1,3 +1,9 @@
 # Databricks Apps entry point
 # DATABRICKS_HOST and DATABRICKS_TOKEN are auto-injected by the runtime
+# Declaring the warehouse grants the forwarded user token the sql OAuth scope
 command: ["python", "backend/run.py"]
+resources:
+  - name: sql-warehouse
+    sql_warehouse:
+      id: "5288ab7cd99c4e09"
+      permission: "CAN_USE"
