@@ -82,7 +82,9 @@ def _execute_as_user(sql: str, access_token: str) -> QueryResultResponse:
         headers={'Authorization': f'Bearer {access_token}'},
         timeout=35,
     )
-    resp.raise_for_status()
+    if not resp.ok:
+        log.error('Statement Execution API %s: %s', resp.status_code, resp.text)
+        resp.raise_for_status()
     data = resp.json()
     state = data.get('status', {}).get('state', '')
     if state != 'SUCCEEDED':
