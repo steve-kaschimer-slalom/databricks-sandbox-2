@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     databricks_host: str = ''
     databricks_token: str = ''
 
-    databricks_warehouse_id: str = ''
+    databricks_warehouse_id: str = '5288ab7cd99c4e09'
     databricks_catalog: str = 'main'
 
     api_host: str = '0.0.0.0'
