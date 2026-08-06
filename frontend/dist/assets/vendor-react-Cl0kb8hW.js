@@ -1,4 +1,4 @@
-import{r as E,R as mc}from"./vendor-query-DOChBpoz.js";var ea={exports:{}},ye={},ta={exports:{}},na={};/**
+import{r as E,R as mc}from"./vendor-query-CScHbywM.js";var ea={exports:{}},ye={},ta={exports:{}},na={};/**
  * @license React
  * scheduler.production.min.js
  *

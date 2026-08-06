@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueries } from '@tanstack/react-query'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { RefreshCw, AlertCircle } from 'lucide-react'
 import { runQuery } from '../api/databricks'
@@ -34,13 +34,12 @@ function KpiCard({ label, value, loading }: { label: string; value: string; load
 export default function DashboardPage() {
   const [chartRefreshKey, setChartRefreshKey] = useState(0)
 
-  const kpiQueries = SUMMARY_QUERIES.map((q) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery({
+  const kpiQueries = useQueries({
+    queries: SUMMARY_QUERIES.map((q) => ({
       queryKey: ['kpi', q.id],
       queryFn: () => runQuery(q.sql),
-    })
-  )
+    })),
+  })
 
   const chartQuery = useQuery({
     queryKey: ['dashboard-chart', chartRefreshKey],

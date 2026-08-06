@@ -63,11 +63,14 @@ function downloadCsv(result: QueryResult) {
 }
 
 export default function QueryPage() {
-  const pending = sessionStorage.getItem('pendingQuery')
-  if (pending) {
-    sessionStorage.removeItem('pendingQuery')
-  }
-  const [sql, setSql] = useState(pending ?? PLACEHOLDER_SQL)
+  const [sql, setSql] = useState(() => {
+    const pending = sessionStorage.getItem('pendingQuery')
+    if (pending) {
+      sessionStorage.removeItem('pendingQuery')
+      return pending
+    }
+    return PLACEHOLDER_SQL
+  })
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const { mutate, data: result, isPending, error, reset } = useMutation({
