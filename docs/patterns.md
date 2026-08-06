@@ -256,3 +256,94 @@ def resolve_user_identity(forwarded_user: str, access_token: str | None = None) 
 **When to use:** Any time you need to log or display who is performing an action. The internal user ID is not meaningful to operators reading logs.
 
 **Note:** The `databricks_host` env var is stored without a scheme (`adb-XXXX.azuredatabricks.net`). Always prepend `https://` before building the URL.
+
+---
+
+## Pattern 11 — Dark / light mode with `useTheme` hook
+
+**Problem:** Dark mode state needs to be persisted across page reloads, follow OS preference by default, avoid a flash of unstyled content on load, and keep native browser UI (scrollbars, form controls) in sync with the app theme.
+
+**Solution:** A `useTheme` hook manages the two-state toggle and syncs three surfaces: `localStorage`, the `dark` class on `<html>`, and `<meta name="color-scheme">`. An inline script in `index.html` applies the persisted preference before first paint.
+
+```html
+<!-- index.html <head> — must be inline, NOT type=module or defer -->
+<meta name="color-scheme" content="light dark">
+<script>
+  {
+    const saved = localStorage.getItem('color-scheme');
+    if (saved === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.querySelector('meta[name="color-scheme"]').content = 'dark';
+    } else if (saved === 'light') {
+      document.documentElement.classList.remove('dark');
+      document.querySelector('meta[name="color-scheme"]').content = 'light';
+    }
+  }
+</script>
+```
+
+```typescript
+// src/hooks/useTheme.ts
+type Theme = 'light' | 'dark'
+
+export function useTheme() {
+  const [theme, setThemeState] = useState<Theme>(() => {
+    const saved = localStorage.getItem('color-scheme') as Theme | null
+    return saved ?? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  })
+
+  useEffect(() => {
+    const html = document.documentElement
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="color-scheme"]')
+    if (theme === 'dark') { html.classList.add('dark'); if (meta) meta.content = 'dark' }
+    else { html.classList.remove('dark'); if (meta) meta.content = 'light' }
+  }, [theme])
+
+  // Follow OS changes when no preference is pinned
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const handler = (e: MediaQueryListEvent) => {
+      if (!localStorage.getItem('color-scheme')) setThemeState(e.matches ? 'dark' : 'light')
+    }
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  function toggle() {
+    const system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    const next: Theme = theme === 'dark' ? 'light' : 'dark'
+    if (next === system) localStorage.removeItem('color-scheme')  // back to system default
+    else localStorage.setItem('color-scheme', next)
+    setThemeState(next)
+  }
+
+  return { theme, toggle }
+}
+```
+
+**Recharts colour bridge:** Recharts uses inline styles so `dark:` Tailwind variants cannot apply. Bridge via CSS custom properties:
+
+```css
+/* index.css */
+:root {
+  --chart-grid: #E8E8E8;
+  --chart-tick: #666666;
+  --chart-tooltip-bg: #ffffff;
+  --chart-tooltip-text: #1A1A1A;
+}
+.dark {
+  --chart-grid: #2a3045;
+  --chart-tick: #9ca3af;
+  --chart-tooltip-bg: #1a1f2e;
+  --chart-tooltip-text: #f3f4f6;
+}
+```
+
+```tsx
+// In chart component
+<CartesianGrid stroke="var(--chart-grid)" />
+<XAxis tick={{ fill: 'var(--chart-tick)' }} />
+<Tooltip contentStyle={{ backgroundColor: 'var(--chart-tooltip-bg)', color: 'var(--chart-tooltip-text)' }} />
+```
+
+**When to use:** Any new page or component. Use `dark:` Tailwind variants for all colour utilities. Use the CSS custom property bridge for any third-party component that uses inline styles.

@@ -17,7 +17,8 @@ databricks-sandbox-2/
 ├── frontend/
 │   ├── src/
 │   │   ├── api/              # Axios API client functions
-│   │   ├── components/       # Shared UI components
+│   │   ├── components/       # Shared UI components (Layout, ThemeToggle, Spinner)
+│   │   ├── hooks/            # Custom React hooks (useTheme)
 │   │   ├── pages/            # Route-level page components
 │   │   └── types/            # TypeScript interfaces mirroring backend models
 │   └── dist/                 # Built output — committed and served by FastAPI

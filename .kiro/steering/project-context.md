@@ -16,6 +16,7 @@ Read this file at the start of every session. It captures workspace-specific fac
 app.yaml                    Databricks Apps entry point → command: ["python", "backend/run.py"]
 requirements.txt            Root-level only — this is what Databricks Apps installs in production
 frontend/src/               React SPA (Vite + TypeScript + Tailwind + TanStack Query + Recharts)
+                            └── hooks/      useTheme (dark/light mode toggle)
 frontend/dist/              Built output — committed to repo, served by FastAPI as static files
 backend/app/config.py       Pydantic Settings — all configuration here
 backend/app/main.py         FastAPI app, CORS, static file serving, SPA catch-all

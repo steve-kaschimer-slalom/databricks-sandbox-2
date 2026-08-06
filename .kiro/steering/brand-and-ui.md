@@ -164,11 +164,13 @@ Page content inside `<main>` should:
 ### Charts (Recharts)
 
 - Use `<ResponsiveContainer width="100%" height={280}>` inside a `.card`
-- Grid lines: `<CartesianGrid strokeDasharray="3 3" stroke="#E8E8E8" />`
-- Axis ticks: `tick={{ fontSize: 11, fill: '#666' }}`
+- Grid lines: `<CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />`
+- Axis ticks: `tick={{ fontSize: 11, fill: 'var(--chart-tick)' }}`
 - Bar fill: `fill="#003087"` (navy) with `radius={[3, 3, 0, 0]}`
-- Tooltip: `contentStyle={{ fontSize: 12, borderColor: '#E8E8E8' }}`
+- Tooltip: `contentStyle={{ fontSize: 12, borderColor: 'var(--chart-grid)', backgroundColor: 'var(--chart-tooltip-bg)', color: 'var(--chart-tooltip-text)' }}`
 - Chart cursor: `cursor={{ fill: 'rgba(0,48,135,0.05)' }}`
+
+> Recharts uses inline styles so Tailwind `dark:` variants don't apply. Always use the CSS custom properties above — they are defined on `:root` and `.dark` in `index.css` and switch automatically with the theme.
 
 ### Loading states
 
@@ -208,3 +210,65 @@ Standard sizes: `size={13}` for dense UI (table headers, badges), `size={15}–{
 - All interactive elements (`<button>`, `<NavLink>`) include `focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2` via the `.btn-primary` / `.btn-secondary` classes.
 - Color is never the sole indicator of state — badges use both background color and text label.
 - `aria-label` should be added to icon-only buttons.
+
+---
+
+## Dark Mode
+
+The app supports dark/light mode via Tailwind's `darkMode: 'class'` strategy. The `dark` class is toggled on `<html>` by the `useTheme` hook (`src/hooks/useTheme.ts`).
+
+### Adding dark mode to new components
+
+Use `dark:` variants alongside every light-mode colour utility:
+
+```tsx
+// Text
+<p className="text-gray-600 dark:text-gray-400">Secondary text</p>
+
+// Backgrounds
+<div className="bg-white dark:bg-[#1a1f2e]">Card content</div>
+
+// Borders
+<div className="border border-gray-100 dark:border-[#2a3045]">…</div>
+
+// Hover
+<button className="hover:bg-gray-50 dark:hover:bg-[#0f1117]">…</button>
+```
+
+### Dark surface palette
+
+These hex values are used inline (not in `tailwind.config.js`). They are the canonical dark mode surfaces for this app:
+
+| Surface | Value | Usage |
+|---|---|---|
+| Page background | `#0f1117` | `body`, table headers, textarea |
+| Card / panel | `#1a1f2e` | `.card`, content panels |
+| Header / section header bars | `#0d1526` | Navy header bars inside cards |
+| Footer | `#0a0e1a` | `<footer>` |
+| Border | `#2a3045` | All borders in dark mode |
+| Border hover | `#3a4060` | Hovered card borders |
+
+### CSS custom properties for third-party components
+
+Any library that uses inline styles (e.g. Recharts) cannot use Tailwind `dark:` variants. Use these CSS custom properties instead — defined on `:root` (light) and `.dark` in `index.css`:
+
+| Property | Light | Dark |
+|---|---|---|
+| `--chart-grid` | `#E8E8E8` | `#2a3045` |
+| `--chart-tick` | `#666666` | `#9ca3af` |
+| `--chart-tooltip-bg` | `#ffffff` | `#1a1f2e` |
+| `--chart-tooltip-text` | `#1A1A1A` | `#f3f4f6` |
+
+### ThemeToggle component
+
+`src/components/ThemeToggle.tsx` — drop this into any header. It reads/writes via `useTheme` and renders a Sun or Moon icon. No props needed.
+
+```tsx
+import ThemeToggle from '../components/ThemeToggle'
+
+// In a header:
+<div className="flex items-center gap-3">
+  {/* ...other header content... */}
+  <ThemeToggle />
+</div>
+```

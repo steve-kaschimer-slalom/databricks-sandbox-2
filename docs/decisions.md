@@ -151,3 +151,63 @@ Architectural and implementation decisions made during the initial build, with r
 **Trade-offs:**
 - Loses SDK convenience wrappers (pagination, retry, type-safe response models) for user-scoped calls. Acceptable because both call sites (`/api/2.0/sql/statements` and `/api/2.0/preview/scim/v2/Me`) have simple, stable schemas.
 - The service principal `WorkspaceClient` is still used for warehouse discovery and local dev fallback — SDK stays in the dependency tree.
+
+---
+
+## ADR-010 — Dark / light mode via Tailwind class strategy
+
+**Date:** 2026-08
+**Status:** Adopted
+
+**Decision:** Implement dark mode using Tailwind's `darkMode: 'class'` strategy, a `useTheme` hook, and a `ThemeToggle` button in the header. The choice is persisted in `localStorage` and applied before first paint via an inline script in `index.html`.
+
+**Rationale:**
+- Class-based dark mode gives full control over which elements respond — no accidental dark styling on third-party components.
+- An inline (non-module, non-deferred) script in `<head>` reads `localStorage` before the browser renders, preventing flash of unstyled content (FOUC).
+- A two-state toggle (system default ↔ opposite) follows the UX guidance from `modern-web-guidance`: "Always dark" and "Always light" are the only meaningful user intents; exposing all three states creates two options that always look identical.
+- `<meta name="color-scheme">` is updated alongside the `dark` class so native browser UI (scrollbars, form controls) matches the app theme.
+
+**Dark surface palette (not in Tailwind config — used inline via `dark:bg-[...]`):**
+
+| Surface | Value |
+|---|---|
+| Page background | `#0f1117` |
+| Card / panel | `#1a1f2e` |
+| Subtle background (table headers, textarea) | `#0f1117` |
+| Header / section header | `#0d1526` |
+| Footer | `#0a0e1a` |
+| Border | `#2a3045` |
+| Border hover | `#3a4060` |
+
+**Recharts colour bridge:** Recharts uses inline styles, so `dark:` variants cannot apply directly. CSS custom properties (`--chart-grid`, `--chart-tick`, `--chart-tooltip-bg`, `--chart-tooltip-text`) are defined on `:root` and `.dark` in `index.css` and consumed via `var()` in the chart props.
+
+**Trade-offs:**
+- Dark surface hex values are used inline rather than added to `tailwind.config.js` to keep the config clean; they are documented here and in the brand steering file as the canonical reference.
+- OS-level system preference changes are followed in real time when no preference is pinned in `localStorage`. Once pinned, the pin takes precedence.
+
+---
+
+## ADR-011 — Vite `manualChunks` for vendor bundle splitting
+
+**Date:** 2026-08
+**Status:** Adopted
+
+**Decision:** Configure `build.rollupOptions.output.manualChunks` in `vite.config.ts` to split vendor dependencies into four named chunks: `vendor-react`, `vendor-query`, `vendor-charts`, `vendor-misc`.
+
+**Rationale:**
+- Default Vite build produced a single 650KB chunk, triggering the Rollup chunk size warning and preventing efficient browser caching.
+- Splitting by library type means app code changes (most frequent) don't bust the cache for large, stable vendor bundles like Recharts.
+
+**Resulting chunk sizes (gzip):**
+
+| Chunk | Gzip |
+|---|---|
+| `vendor-react` (React, ReactDOM, React Router) | 51KB |
+| `vendor-query` (TanStack Query) | 15KB |
+| `vendor-charts` (Recharts + lodash) | 103KB |
+| `vendor-misc` (Axios, Lucide React) | 20KB |
+| `index` (app code) | 5KB |
+
+**Trade-offs:**
+- Recharts bundles lodash internally; the `vendor-charts` chunk remains large (103KB gzip) and cannot be reduced without replacing Recharts.
+- More HTTP requests on first load (5 JS files vs 1), negligible over HTTP/2.
