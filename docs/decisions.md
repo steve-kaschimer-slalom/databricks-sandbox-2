@@ -114,3 +114,40 @@ Architectural and implementation decisions made during the initial build, with r
 **Rationale:**
 - Flat names (`text-navy`, `bg-gold`) are shorter and work directly with Tailwind's `@apply` directive in `index.css`.
 - Nested names (`text-<business_name>-navy`) require updating all utility classes if the prefix changes.
+
+---
+
+## ADR-008 — Per-user query execution via `X-Forwarded-Access-Token`
+
+**Date:** 2026-08  
+**Status:** Adopted
+
+**Decision:** When **User Authorization** is enabled in the Databricks Apps UI, every query is executed under the signed-in user's forwarded OAuth token instead of the service principal. The service principal path is kept as a fallback for local dev only.
+
+**Rationale:**
+- Unity Catalog enforces row-level, column-level, and schema-level permissions at the warehouse level — but only when the query runs as the user, not as a service principal.
+- Using the forwarded token requires zero additional configuration per user: Databricks Apps injects `X-Forwarded-Access-Token` automatically once User Authorization is enabled.
+- The `sql` scope is included in the forwarded token when the `app.yaml` declares the SQL warehouse as a resource with `CAN_USE` permission.
+
+**Trade-offs:**
+- Users need a fresh session (new login or incognito window) after User Authorization is first enabled to receive a token with the `sql` scope — existing sessions retain the old token until expiry.
+- Each user must have `CAN_USE` on the warehouse and appropriate UC grants (`USE CATALOG`, `USE SCHEMA`, `SELECT`) granted externally via Databricks SQL or Terraform.
+
+**Implementation note:** A 403 from the SQL Statements API is treated as a "missing scope" signal and triggers the SP fallback rather than surfacing an error to the user.
+
+---
+
+## ADR-009 — `requests` library for user-scoped HTTP calls instead of SDK
+
+**Date:** 2026-08  
+**Status:** Adopted
+
+**Decision:** All user-scoped HTTP calls (SQL statement execution, SCIM identity resolution) use the `requests` library directly with `Authorization: Bearer {user_token}`, rather than instantiating a `WorkspaceClient(token=user_token)`.
+
+**Rationale:**
+- The Databricks Python SDK raises `ConfigAttributeError: more than one authorization method configured` when `token=` is passed while `DATABRICKS_CLIENT_ID` / `DATABRICKS_CLIENT_SECRET` are present in the environment. Both are present in deployed Databricks Apps.
+- Direct HTTP calls have no credential-chain validation; passing the bearer token in the `Authorization` header is the canonical REST API pattern.
+
+**Trade-offs:**
+- Loses SDK convenience wrappers (pagination, retry, type-safe response models) for user-scoped calls. Acceptable because both call sites (`/api/2.0/sql/statements` and `/api/2.0/preview/scim/v2/Me`) have simple, stable schemas.
+- The service principal `WorkspaceClient` is still used for warehouse discovery and local dev fallback — SDK stays in the dependency tree.

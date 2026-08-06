@@ -183,3 +183,76 @@ Inside Python code, use `Path(__file__).resolve()` to build absolute paths rathe
 # Resolves correctly regardless of CWD
 _dist = Path(__file__).resolve().parent.parent.parent / 'frontend' / 'dist'
 ```
+
+---
+
+## Pattern 9 — User-scoped query execution with SP fallback
+
+**Problem:** Queries run as the service principal bypass Unity Catalog per-user permissions. Running as the user requires a bearer token, but the Databricks SDK raises a credential-conflict error when a token is passed alongside the injected M2M credentials.
+
+**Solution:** Use `requests` directly for user-scoped calls; fall back to the SDK service principal path when no forwarded token is present (local dev) or on 403.
+
+```python
+import requests
+
+def execute_query(sql: str, user_token: str | None = None) -> QueryResultResponse:
+    if user_token:
+        try:
+            return _execute_as_user(sql, user_token)
+        except requests.HTTPError as exc:
+            if exc.response is not None and exc.response.status_code == 403:
+                # Token missing sql scope — degrade gracefully
+                return _execute_as_sp(sql)
+            raise
+    return _execute_as_sp(sql)
+
+def _execute_as_user(sql: str, access_token: str) -> QueryResultResponse:
+    resp = requests.post(
+        f'{_host()}/api/2.0/sql/statements',
+        json={'warehouse_id': _resolve_warehouse_id(), 'statement': sql, 'wait_timeout': '30s'},
+        headers={'Authorization': f'Bearer {access_token}'},
+        timeout=35,
+    )
+    resp.raise_for_status()
+    ...
+```
+
+**When to use:** Any FastAPI endpoint that executes SQL on behalf of a Databricks Apps user. Pass `x_forwarded_access_token: str | None = Header(default=None)` and thread it through to the service.
+
+**Prerequisite:** User Authorization must be enabled in the Databricks Apps UI settings **and** the `app.yaml` must declare the SQL warehouse as a resource with `CAN_USE` to include the `sql` scope in the forwarded token.
+
+---
+
+## Pattern 10 — User identity resolution via SCIM /Me
+
+**Problem:** `X-Forwarded-User` contains an opaque internal Databricks user ID (e.g. `436568226980462@7405615634530034`), not a human-readable email.
+
+**Solution:** Call `GET /api/2.0/preview/scim/v2/Me` with the forwarded access token and cache the result by internal ID for the process lifetime.
+
+```python
+_user_identity_cache: dict[str, str] = {}
+
+def resolve_user_identity(forwarded_user: str, access_token: str | None = None) -> str:
+    if forwarded_user in _user_identity_cache:
+        return _user_identity_cache[forwarded_user]
+    if access_token:
+        host = settings.databricks_host.rstrip('/')
+        if not host.startswith('http'):
+            host = f'https://{host}'
+        resp = requests.get(
+            f'{host}/api/2.0/preview/scim/v2/Me',
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=5,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        resolved = data.get('userName') or data.get('displayName') or forwarded_user
+        _user_identity_cache[forwarded_user] = resolved
+        return resolved
+    _user_identity_cache[forwarded_user] = forwarded_user
+    return forwarded_user
+```
+
+**When to use:** Any time you need to log or display who is performing an action. The internal user ID is not meaningful to operators reading logs.
+
+**Note:** The `databricks_host` env var is stored without a scheme (`adb-XXXX.azuredatabricks.net`). Always prepend `https://` before building the URL.

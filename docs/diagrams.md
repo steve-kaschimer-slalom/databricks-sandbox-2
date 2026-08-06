@@ -2,24 +2,55 @@
 
 ## Query Execution Sequence
 
-End-to-end flow when a user runs SQL from the Query page.
+End-to-end flow when a user runs SQL from the Query page. Databricks Apps injects `X-Forwarded-Access-Token` on every request when User Authorization is enabled.
 
 ```mermaid
 sequenceDiagram
     actor User
     participant QueryPage as QueryPage.tsx
+    participant AppsProxy as Apps Proxy
     participant API as /api/query (FastAPI)
     participant Service as databricks_service.py
     participant Warehouse as SQL Warehouse
 
     User->>QueryPage: Types SQL, presses Ctrl+Enter
-    QueryPage->>API: POST /api/query { sql }
-    API->>Service: execute_query(sql)
-    Service->>Warehouse: execute_statement(warehouse_id, sql, wait_timeout=30s)
+    QueryPage->>AppsProxy: POST /api/query { sql }
+    AppsProxy->>API: POST /api/query + X-Forwarded-Access-Token
+    API->>Service: execute_query(sql, user_token)
+    Service->>Warehouse: POST /api/2.0/sql/statements (Bearer user_token)
+    Note over Warehouse: UC enforces user's GRANT/REVOKE
     Warehouse-->>Service: StatementResponse (SUCCEEDED + result rows)
     Service-->>API: QueryResultResponse { columns, rows, row_count, execution_time_ms }
     API-->>QueryPage: 200 JSON
     QueryPage-->>User: Renders result table
+```
+
+---
+
+## User Identity Resolution Sequence
+
+How the app resolves `X-Forwarded-User` (an opaque internal ID) to a human-readable email, displayed in the header.
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Layout as Layout.tsx
+    participant API as /api/me (FastAPI)
+    participant Service as databricks_service.py
+    participant SCIM as Databricks SCIM API
+
+    User->>Layout: App load
+    Layout->>API: GET /api/me
+    API->>Service: resolve_user_identity(x_forwarded_user, access_token)
+    alt cache hit
+        Service-->>API: cached email
+    else first request for this user
+        Service->>SCIM: GET /api/2.0/preview/scim/v2/Me (Bearer user_token)
+        SCIM-->>Service: { userName: "steve.kaschimer@slalom.com", ... }
+        Service-->>API: email (cached for process lifetime)
+    end
+    API-->>Layout: { email: "steve.kaschimer@slalom.com" }
+    Layout-->>User: Displays email top-right
 ```
 
 ---
@@ -105,10 +136,10 @@ How the backend resolves which SQL Warehouse to use at startup.
 ```mermaid
 flowchart TD
     Start([Request arrives]) --> Check{settings.databricks_warehouse_id set?}
-    Check -- Yes --> UseConfigured[Use configured ID\n5288ab7cd99c4e09]
-    Check -- No --> List[client.warehouses.list()]
+    Check -- Yes --> UseConfigured["Use configured ID<br/>5288ab7cd99c4e09"]
+    Check -- No --> List["client.warehouses.list()"]
     List --> Any{Any warehouses?}
-    Any -- Yes --> UseFirst[Use first warehouse\nlog warning]
+    Any -- Yes --> UseFirst["Use first warehouse<br/>log warning"]
     Any -- No --> Raise[raise RuntimeError]
     UseConfigured --> Execute[execute_statement]
     UseFirst --> Execute
