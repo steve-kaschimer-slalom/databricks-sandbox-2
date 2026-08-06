@@ -92,10 +92,11 @@ def list_tables(catalog: str, schema: str) -> list[TableSummary]:
 
 
 def list_schemas(catalog: str) -> SchemaTree:
-    sql = f'SELECT schema_name FROM {catalog}.information_schema.schemata ORDER BY schema_name'
-    result = execute_query(sql)
+    # SHOW SCHEMAS requires no information_schema privileges
+    result = execute_query(f'SHOW SCHEMAS IN {catalog}')
+    name_idx = result.columns.index('databaseName') if 'databaseName' in result.columns else 0
     return SchemaTree(
         catalog=catalog,
-        schemas=[row[0] for row in result.rows],
+        schemas=[row[name_idx] for row in result.rows],
     )
 

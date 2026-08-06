@@ -4,7 +4,7 @@ import { Database, Table2, ChevronRight, TerminalSquare } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { fetchSchemas, fetchTables } from '../api/databricks'
 
-const DEFAULT_CATALOG = 'main'
+const DEFAULT_CATALOG = 'dbw_sandbox_sk'
 
 export default function TablesPage() {
   const [catalog] = useState(DEFAULT_CATALOG)

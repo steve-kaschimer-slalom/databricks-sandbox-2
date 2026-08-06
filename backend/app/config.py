@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     databricks_token: str = ''
 
     databricks_warehouse_id: str = '5288ab7cd99c4e09'
-    databricks_catalog: str = 'main'
+    databricks_catalog: str = 'dbw_sandbox_sk'
 
     api_host: str = '0.0.0.0'
     api_port: int = 8000
