@@ -5,6 +5,8 @@ class Settings(BaseSettings):
     # Auto-injected by Databricks Apps runtime; set manually for local dev
     databricks_host: str = ''
     databricks_token: str = ''
+    databricks_client_id: str = ''
+    databricks_client_secret: str = ''
 
     databricks_warehouse_id: str = '5288ab7cd99c4e09'
     databricks_catalog: str = 'dbw_sandbox_sk'
