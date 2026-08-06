@@ -18,7 +18,7 @@ export default function Layout() {
   })
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[#0f1117]">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-[#0f1117]">
       <header className="bg-navy dark:bg-[#0d1526] text-white shadow-md dark:shadow-none dark:border-b dark:border-[#2a3045]">
         <div className="max-w-screen-xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
