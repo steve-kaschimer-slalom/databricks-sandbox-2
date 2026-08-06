@@ -12,16 +12,24 @@ from app.models import QueryResultResponse, TableSummary, SchemaTree
 log = logging.getLogger(__name__)
 
 
-@lru_cache(maxsize=128)
-def resolve_user_identity(forwarded_user: str) -> str:
-    """Resolve a Databricks internal user ID (userId@workspaceId) to an email/username."""
-    scim_id = forwarded_user.split('@')[0]
-    try:
-        user = _sp_client().users.get(id=scim_id)
-        return user.user_name or user.display_name or forwarded_user
-    except Exception:
-        log.warning('Could not resolve user identity for %s', forwarded_user)
-        return forwarded_user
+# Keyed by Databricks internal user ID; populated on first request per user
+_user_identity_cache: dict[str, str] = {}
+
+
+def resolve_user_identity(forwarded_user: str, access_token: str | None = None) -> str:
+    if forwarded_user in _user_identity_cache:
+        return _user_identity_cache[forwarded_user]
+    if access_token:
+        try:
+            client = WorkspaceClient(host=settings.databricks_host or None, token=access_token)
+            profile = client.current_user.me()
+            resolved = profile.user_name or profile.display_name or forwarded_user
+            _user_identity_cache[forwarded_user] = resolved
+            return resolved
+        except Exception as exc:
+            log.warning('Could not resolve user identity for %s: %s', forwarded_user, exc)
+    _user_identity_cache[forwarded_user] = forwarded_user
+    return forwarded_user
 
 
 @lru_cache(maxsize=1)
