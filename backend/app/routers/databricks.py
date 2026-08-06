@@ -11,8 +11,14 @@ router = APIRouter(prefix='/api', tags=['data'])
 
 
 @router.get('/me')
-def me(x_forwarded_user: str | None = Header(default=None)) -> dict:
-    return {'email': x_forwarded_user}
+def me(
+    x_forwarded_user: str | None = Header(default=None),
+    remote_user: str | None = Header(default=None),
+    x_databricks_user: str | None = Header(default=None),
+) -> dict:
+    email = x_forwarded_user or remote_user or x_databricks_user
+    log.info('Identity headers — X-Forwarded-User: %s  Remote-User: %s  X-Databricks-User: %s', x_forwarded_user, remote_user, x_databricks_user)
+    return {'email': email}
 
 
 @router.post('/query', response_model=QueryResultResponse)

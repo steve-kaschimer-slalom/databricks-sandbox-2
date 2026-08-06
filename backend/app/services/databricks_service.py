@@ -21,14 +21,6 @@ def _sp_client() -> WorkspaceClient:
     )
 
 
-def _user_client(user_token: str | None) -> WorkspaceClient:
-    # Per-request client so queries run as the user and UC permissions are enforced
-    return WorkspaceClient(
-        host=settings.databricks_host or None,
-        token=user_token or settings.databricks_token or None,
-    )
-
-
 @lru_cache(maxsize=1)
 def _resolve_warehouse_id() -> str:
     if settings.databricks_warehouse_id:
@@ -41,8 +33,8 @@ def _resolve_warehouse_id() -> str:
     return warehouse_id
 
 
-def execute_query(sql: str, user_token: str | None = None) -> QueryResultResponse:
-    client = _user_client(user_token)
+def execute_query(sql: str, user_token: str | None = None) -> QueryResultResponse:  # noqa: ARG001 — user_token reserved for future per-user UC enforcement
+    client = _sp_client()
     warehouse_id = _resolve_warehouse_id()
     start = time.monotonic()
 
@@ -82,9 +74,9 @@ def execute_query(sql: str, user_token: str | None = None) -> QueryResultRespons
     )
 
 
-def list_tables(catalog: str, schema: str, user_token: str | None = None) -> list[TableSummary]:
+def list_tables(catalog: str, schema: str, user_token: str | None = None) -> list[TableSummary]:  # noqa: ARG001
     sql = f"SELECT table_catalog, table_schema, table_name, table_type, comment FROM {catalog}.information_schema.tables WHERE table_schema = '{schema}' ORDER BY table_name"
-    result = execute_query(sql, user_token=user_token)
+    result = execute_query(sql)
     col = {name: idx for idx, name in enumerate(result.columns)}
     return [
         TableSummary(
@@ -98,9 +90,9 @@ def list_tables(catalog: str, schema: str, user_token: str | None = None) -> lis
     ]
 
 
-def list_schemas(catalog: str, user_token: str | None = None) -> SchemaTree:
+def list_schemas(catalog: str, user_token: str | None = None) -> SchemaTree:  # noqa: ARG001
     # SHOW SCHEMAS requires no information_schema privileges
-    result = execute_query(f'SHOW SCHEMAS IN {catalog}', user_token=user_token)
+    result = execute_query(f'SHOW SCHEMAS IN {catalog}')
     name_idx = result.columns.index('databaseName') if 'databaseName' in result.columns else 0
     return SchemaTree(
         catalog=catalog,
