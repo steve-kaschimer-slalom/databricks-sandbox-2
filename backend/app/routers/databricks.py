@@ -35,7 +35,7 @@ def run_query(
     if not sql:
         raise HTTPException(status_code=400, detail='`sql` field is required')
     if x_forwarded_user:
-        log.info('Query submitted by %s', x_forwarded_user)
+        log.info('Query submitted by %s', databricks_service.resolve_user_identity(x_forwarded_user))
     try:
         return databricks_service.execute_query(sql, user_token=x_forwarded_access_token)
     except RuntimeError as exc:
