@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { RefreshCw, AlertCircle } from 'lucide-react'
 import { runQuery } from '../api/databricks'
+import Spinner from '../components/Spinner'
 
 // Replace these SQL statements with queries against your actual Delta tables
 const SUMMARY_QUERIES = [
@@ -21,11 +22,11 @@ const SUMMARY_QUERIES = [
 const CHART_QUERY =
   "SELECT pickup_zip AS category, COUNT(*) AS count FROM samples.nyctaxi.trips GROUP BY pickup_zip ORDER BY count DESC LIMIT 10"
 
-function KpiCard({ label, value }: { label: string; value: string }) {
+function KpiCard({ label, value, loading }: { label: string; value: string; loading?: boolean }) {
   return (
     <div className="stat-card">
       <span className="stat-label">{label}</span>
-      <span className="stat-value">{value}</span>
+      {loading ? <Spinner size={22} /> : <span className="stat-value">{value}</span>}
     </div>
   )
 }
@@ -85,9 +86,10 @@ export default function DashboardPage() {
           <KpiCard
             key={SUMMARY_QUERIES[i].id}
             label={SUMMARY_QUERIES[i].label}
+            loading={q.isLoading}
             value={
               q.isLoading
-                ? '…'
+                ? ''
                 : q.error
                 ? 'Error'
                 : String(q.data?.rows[0]?.[0] ?? '—')
@@ -101,8 +103,8 @@ export default function DashboardPage() {
           Top 10 Pickup Zones by Trip Count
         </h2>
         {chartQuery.isLoading ? (
-          <div className="h-64 flex items-center justify-center text-gray-600 text-sm">
-            Running query…
+          <div className="h-64 flex items-center justify-center">
+            <Spinner size={32} />
           </div>
         ) : chartQuery.error ? (
           <div className="h-64 flex items-center justify-center text-red-600 text-sm">

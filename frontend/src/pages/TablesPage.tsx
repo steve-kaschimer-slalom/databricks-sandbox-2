@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Database, Table2, ChevronRight, TerminalSquare } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { fetchSchemas, fetchTables } from '../api/databricks'
+import Spinner from '../components/Spinner'
 
 const DEFAULT_CATALOG = 'dbw_sandbox_sk'
 
@@ -47,7 +48,7 @@ export default function TablesPage() {
               Schemas
             </div>
             {schemasQuery.isLoading ? (
-              <div className="py-6 text-center text-gray-600 text-xs">Loading…</div>
+              <div className="py-6 flex justify-center"><Spinner /></div>
             ) : schemasQuery.error ? (
               <div className="py-6 text-center text-red-600 text-xs">Failed to load schemas.</div>
             ) : (
@@ -79,8 +80,8 @@ export default function TablesPage() {
               Select a schema to view its tables.
             </div>
           ) : tablesQuery.isLoading ? (
-            <div className="card flex items-center justify-center h-40 text-gray-600 text-sm">
-              Loading tables…
+            <div className="card flex items-center justify-center h-40">
+              <Spinner size={28} />
             </div>
           ) : tablesQuery.error ? (
             <div className="card flex items-center justify-center h-40 text-red-600 text-sm">
