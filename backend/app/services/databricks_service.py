@@ -3,6 +3,7 @@ import time
 from functools import lru_cache
 from typing import Any
 
+import requests
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.sql import StatementState
 
@@ -21,15 +22,12 @@ def resolve_user_identity(forwarded_user: str, access_token: str | None = None) 
         return _user_identity_cache[forwarded_user]
     if access_token:
         try:
-            # Blank out OAuth env vars so the SDK doesn't see two auth methods at once
-            client = WorkspaceClient(
-                host=settings.databricks_host or None,
-                token=access_token,
-                client_id='',
-                client_secret='',
-            )
-            profile = client.current_user.me()
-            resolved = profile.user_name or profile.display_name or forwarded_user
+            # Direct SCIM call avoids SDK credential-conflict validation
+            url = f"{settings.databricks_host.rstrip('/')}/api/2.0/preview/scim/v2/Me"
+            resp = requests.get(url, headers={'Authorization': f'Bearer {access_token}'}, timeout=5)
+            resp.raise_for_status()
+            data = resp.json()
+            resolved = data.get('userName') or data.get('displayName') or forwarded_user
             _user_identity_cache[forwarded_user] = resolved
             return resolved
         except Exception as exc:
