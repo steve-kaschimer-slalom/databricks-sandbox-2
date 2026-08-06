@@ -23,7 +23,10 @@ def resolve_user_identity(forwarded_user: str, access_token: str | None = None) 
     if access_token:
         try:
             # Direct SCIM call avoids SDK credential-conflict validation
-            url = f"{settings.databricks_host.rstrip('/')}/api/2.0/preview/scim/v2/Me"
+            host = settings.databricks_host.rstrip('/')
+            if not host.startswith('http'):
+                host = f'https://{host}'
+            url = f'{host}/api/2.0/preview/scim/v2/Me'
             resp = requests.get(url, headers={'Authorization': f'Bearer {access_token}'}, timeout=5)
             resp.raise_for_status()
             data = resp.json()
