@@ -12,6 +12,18 @@ from app.models import QueryResultResponse, TableSummary, SchemaTree
 log = logging.getLogger(__name__)
 
 
+@lru_cache(maxsize=128)
+def resolve_user_identity(forwarded_user: str) -> str:
+    """Resolve a Databricks internal user ID (userId@workspaceId) to an email/username."""
+    scim_id = forwarded_user.split('@')[0]
+    try:
+        user = _sp_client().users.get(id=scim_id)
+        return user.user_name or user.display_name or forwarded_user
+    except Exception:
+        log.warning('Could not resolve user identity for %s', forwarded_user)
+        return forwarded_user
+
+
 @lru_cache(maxsize=1)
 def _sp_client() -> WorkspaceClient:
     # Service principal client — used only for warehouse discovery and local dev fallback

@@ -16,8 +16,12 @@ def me(
     remote_user: str | None = Header(default=None),
     x_databricks_user: str | None = Header(default=None),
 ) -> dict:
-    email = x_forwarded_user or remote_user or x_databricks_user
+    raw_identity = x_forwarded_user or remote_user or x_databricks_user
     log.info('Identity headers — X-Forwarded-User: %s  Remote-User: %s  X-Databricks-User: %s', x_forwarded_user, remote_user, x_databricks_user)
+    if raw_identity:
+        email = databricks_service.resolve_user_identity(raw_identity)
+    else:
+        email = None
     return {'email': email}
 
 
