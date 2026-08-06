@@ -104,13 +104,13 @@ Architectural and implementation decisions made during the initial build, with r
 
 ---
 
-## ADR-007 — Suncor brand colors via Tailwind custom palette
+## ADR-007 — Brand colors via Tailwind custom palette
 
 **Date:** 2026-08  
 **Status:** Adopted
 
-**Decision:** Brand colors (`navy` = `#003087`, `gold` = `#F5A800`) are defined at the top level of `tailwind.config.js` `theme.extend.colors`, not nested under a `suncor` prefix.
+**Decision:** Brand colors (`navy` = `#003087`, `gold` = `#F5A800`) are defined at the top level of `tailwind.config.js` `theme.extend.colors`, not nested under a `<business_namw>` prefix.
 
 **Rationale:**
 - Flat names (`text-navy`, `bg-gold`) are shorter and work directly with Tailwind's `@apply` directive in `index.css`.
-- Nested names (`text-suncor-navy`) require updating all utility classes if the prefix changes.
+- Nested names (`text-<business_name>-navy`) require updating all utility classes if the prefix changes.
